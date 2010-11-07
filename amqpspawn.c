@@ -53,6 +53,7 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/socket.h>
 
 #include <stdint.h>
 #include <amqp.h>
@@ -125,6 +126,7 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --execute/-e program   program to execute\n");
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
+    fprintf(stderr, "  --foreground/-f        do not daemonise\n");
     fprintf(stderr, "\n\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
     fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n\n");
@@ -138,6 +140,7 @@ int main(int argc, char **argv) {
   char const *hostname = "amqpbroker"; // amqp hostname
   int port = 5672; // amqp port
   static int verbose_flag = 0; // be verbose?
+  static int foreground_flag = 0;
   int c; // for option parsing
   char const *exchange = "";
   char const *bindingkey = "";
@@ -173,13 +176,14 @@ int main(int argc, char **argv) {
       {"vhost", required_argument, 0, 'v'},
       {"host", required_argument, 0, 'h'},
       {"port", required_argument, 0, 'P'},
+      {"foreground", no_argument, 0, 'f'},
       {"execute", required_argument, 0, 'e'},
       {"queue", required_argument, 0, 'q'},
       {"help", no_argument, 0, '?'},
       {0, 0, 0, 0}
     };
     int option_index = 0;
-    c = getopt_long(argc, argv, "v:h:P:u:p:e:q:?",
+    c = getopt_long(argc, argv, "v:h:P:u:p:fe:q:?",
                     long_options, &option_index);
     if(c == -1)
       break;
@@ -197,6 +201,8 @@ int main(int argc, char **argv) {
         port = atoi(optarg);
         port = port > 0 ? port : 5672; // 5672 is the default amqp port
         break;
+      case 'f':
+        foreground_flag = 1;
       case 'e':
         program = optarg;
         break;
@@ -235,13 +241,20 @@ int main(int argc, char **argv) {
 
   die_on_error(sockfd = amqp_open_socket(hostname, port), "Opening socket");
   amqp_set_sockfd(conn, sockfd);
-  die_on_amqp_error(amqp_login(conn, vhost, 0, 131072, 0,
+  die_on_amqp_error(amqp_login(conn, vhost,
+                               0, /* channel_max */
+                               10485760, /* max frame size, 10MB */
+                               30, /* heartbeat, 30 secs */
                                AMQP_SASL_METHOD_PLAIN,
                                username, password),
 		    "Logging in");
   amqp_channel_open(conn, 1);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
-
+  {
+    int optval = 1;
+    socklen_t optlen = sizeof(optlen);
+    setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
+  }
   {
     amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, 1, queue, 0, 0, 0, 1,
 						    AMQP_EMPTY_TABLE);
@@ -253,15 +266,16 @@ int main(int argc, char **argv) {
     }
   }
 
-  amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes(exchange), amqp_cstring_bytes(bindingkey),
-		  AMQP_EMPTY_TABLE);
+  amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes(exchange),
+                  amqp_cstring_bytes(bindingkey), AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
-  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, 0, 1, 0, AMQP_EMPTY_TABLE);
+  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, 0, 0, 0,
+                     AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
   // If executing a program, daemonise
-  if(NULL != program)
+  if(NULL != program && 0 == foreground_flag)
   {
     pid_t pid, sid;
     pid = fork();
@@ -279,6 +293,7 @@ int main(int argc, char **argv) {
   {
     amqp_frame_t frame;
     int result;
+    int status = 0; /* wait() status, used whether to send ACK */
 
     amqp_basic_deliver_t *d;
     amqp_basic_properties_t *p;
@@ -296,7 +311,11 @@ int main(int argc, char **argv) {
 	break;
 
       //printf("Frame type %d, channel %d\n", frame.frame_type, frame.channel);
-      if (frame.frame_type != AMQP_FRAME_METHOD)
+      if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
+        // send the same heartbeat frame back
+        amqp_send_frame(conn, &frame);
+        continue;
+      } else if (frame.frame_type != AMQP_FRAME_METHOD)
 	continue;
 
       //printf("Method %s\n", amqp_method_name(frame.payload.method.id));
@@ -349,10 +368,6 @@ int main(int argc, char **argv) {
           
           perror("Error while writing received message to temp file");
         }
-/*
-	amqp_dump(frame.payload.body_fragment.bytes,
-		  frame.payload.body_fragment.len);
-*/
       }
 
       close(tempfd);
@@ -370,7 +385,7 @@ int main(int argc, char **argv) {
               exit(EXIT_FAILURE);
             }
           } else {
-            int status = 0;
+            status = 0;
             wait(&status);
           }
         } else {
@@ -380,6 +395,10 @@ int main(int argc, char **argv) {
         }
         free(routekey);
       }
+
+      // send ack on complete retrieval of the body frame
+      if(0 == status)
+        amqp_basic_ack(conn, frame.channel, d->delivery_tag, 0);
 
 
       if (body_received != body_target) {
