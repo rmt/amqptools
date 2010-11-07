@@ -47,7 +47,7 @@ amqpsend
 amqpsend sends a message to an exchange using the specified routing key.
 You may also pass a filename as input.
   
-  $ ./amqpsend --help::
+$ ./amqpsend --help::
   
   Usage: ./amqpsend [options] exchange routingkey [msg]
   Options:
