@@ -73,6 +73,21 @@ void die_on_error(int x, char const *context) {
   }
 }
 
+/* Handle interrupts, shutdown nicely */
+static int g_shutdown = 0;
+
+void term_handler(int signum) {
+  g_shutdown = 1;
+  fprintf(stderr, "\nShutting down...\n");
+}
+void install_term_handler(int signum) {
+  struct sigaction action;
+  action.sa_handler = term_handler;
+  action.sa_flags = 0;
+  
+  sigaction(signum, &action, NULL);
+}
+
 // from "example_utils.c"
 void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
   switch (x.reply_type) {
@@ -300,9 +315,16 @@ int main(int argc, char **argv) {
     size_t body_target;
     size_t body_received;
 
+    install_term_handler(SIGINT);
+    install_term_handler(SIGTERM);
+    install_term_handler(SIGHUP);
+
     while (1) {
       char tempfile[] = "/tmp/amqp.XXXXXX";
       int tempfd;
+
+      if(g_shutdown == 1)
+          break;
 
       amqp_maybe_release_buffers(conn);
       result = amqp_simple_wait_frame(conn, &frame);
