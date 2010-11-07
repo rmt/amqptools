@@ -141,14 +141,16 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --execute/-e program   program to execute\n");
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
-    fprintf(stderr, "  --foreground/-f        do not daemonise\n");
-    fprintf(stderr, "\n\n");
+    fprintf(stderr, "  --foreground/-f        do not daemonise (default: daemonise with -e)\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
     fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n\n");
-    fprintf(stderr, "Program will be called like \"program \"tempfile\" \"routing_key\"\n");
-    fprintf(stderr, "   where tempfile contains the raw bytestream of the message\n\n");
+    fprintf(stderr, "Program will be called with the following arguments: routing_key, tempfile\n");
+    fprintf(stderr, "   tempfile contains the raw bytestream of the message\n\n");
     fprintf(stderr, "If program is not supplied, the above format will be printed to stdout\n\n");
-    fprintf(stderr, "Example: amqp_listen amqp.example.com 5672 amq.fanout '' ./onmessage.sh\n\n");
+    fprintf(stderr, "Example:\n");
+    fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest \\\n");
+    fprintf(stderr, "amq.fanout mykey --foreground -e ./onmessage.sh\n\n");
 }
 
 int main(int argc, char **argv) {
@@ -402,7 +404,7 @@ int main(int argc, char **argv) {
           // fork and run the program in the background
           pid_t pid = fork();
           if (pid == 0) {
-            if(execl(program, program, tempfile, routekey, NULL) == -1) {
+            if(execl(program, program, routekey, tempfile, NULL) == -1) {
               perror("Could not execute program");
               exit(EXIT_FAILURE);
             }
@@ -412,7 +414,7 @@ int main(int argc, char **argv) {
           }
         } else {
           // print to stdout & flush.
-          printf("%s %s\n", tempfile, routekey);
+          printf("%s %s\n", routekey, tempfile);
           fflush(stdout);
         }
         free(routekey);
