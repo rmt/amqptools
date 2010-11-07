@@ -418,7 +418,7 @@ int main(int argc, char **argv) {
         free(routekey);
       }
 
-      // send ack on complete retrieval of the body frame
+      // send ack on successful processing of the frame
       if(0 == status)
         amqp_basic_ack(conn, frame.channel, d->delivery_tag, 0);
 
