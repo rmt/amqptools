@@ -1,8 +1,9 @@
 Command line AMQP clients
 =========================
 
-amqpspawn and amqpsend allow the simple use of AMQP brokers from the command
-line.
+amqpspawn and amqpsend allow the simple sending and receiving of AMQP messages
+from the command line or shell scripts.  You will require an existing AMQP
+broker such as RabbitMQ to be running somewhere on an accessible network.
 
 They use rabbitmq-c (http://hg.rabbitmq.com/rabbitmq-c/), and the rabbitmq
 library can be statically compiled-in so as to only leave standard libc
@@ -12,8 +13,11 @@ perfect for low resource environments.
 amqpspawn
 ---------
 
-amqpspawn binds to an exchange and queue using a binding key, and can
-spawn a program on message retrieval, or send the same information to stdout.
+amqpspawn binds to an exchange and queue using a binding key, and can spawn a
+program on message retrieval, or send the same information to stdout.
+
+There's a hardcoded maximum message size of 10MB.  If you need to send larger
+messages, consider splitting them into smaller blocks.
 
 $ ./amqpspawn --help::
 
