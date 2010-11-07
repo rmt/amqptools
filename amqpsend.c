@@ -124,13 +124,12 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
     fprintf(stderr, "  --persistent           mark message as persistent\n");
-    fprintf(stderr, "\n\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
     fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n\n");
-    fprintf(stderr, "Program will be called like \"program \"tempfile\" \"routing_key\"\n");
-    fprintf(stderr, "   where tempfile contains the raw bytestream of the message\n\n");
-    fprintf(stderr, "If program is not supplied, the above format will be printed to stdout\n\n");
-    fprintf(stderr, "Example: amqp_listen amqp.example.com 5672 amq.fanout '' ./onmessage.sh\n\n");
+    fprintf(stderr, "Example:\n");
+    fprintf(stderr, "$ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey \"HELLO AMQP\"\n");
+    fprintf(stderr, "$ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey -f /etc/hosts\n\n");
 }
 
 // shamelessly taken from the public domain

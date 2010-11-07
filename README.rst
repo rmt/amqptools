@@ -26,17 +26,19 @@ $ ./amqpspawn --help::
     --execute/-e program   program to execute
     --user/-u username     specify username (default: "guest")
     --password/-p password specify password (default: "guest")
-  
+    --foreground/-f        do not daemonise (default: daemonise with -e)
   
   The following environment variables may also be set:
     AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
   
-  Program will be called like "program "tempfile" "routing_key"
-     where tempfile contains the raw bytestream of the message
+  Program will be called with the following arguments: routing_key, tempfile
+     tempfile contains the raw bytestream of the message
   
   If program is not supplied, the above format will be printed to stdout
-  
-  Example: amqp_listen amqp.example.com 5672 amq.fanout '' ./onmessage.sh
+
+  Example:
+  $ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest \
+  amq.fanout mykey --foreground -e ./onmessage.sh
 
 
 amqpsend
@@ -44,9 +46,9 @@ amqpsend
 
 amqpsend sends a message to an exchange using the specified routing key.
 You may also pass a filename as input.
-
-$ ./amqpsend --help::
-
+  
+  $ ./amqpsend --help::
+  
   Usage: ./amqpsend [options] exchange routingkey [msg]
   Options:
     --host/-h host         specify the host (default: "amqpbroker")
@@ -57,13 +59,10 @@ $ ./amqpsend --help::
     --password/-p password specify password (default: "guest")
     --persistent           mark message as persistent
   
-  
   The following environment variables may also be set:
     AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
   
-  Program will be called like "program "tempfile" "routing_key"
-     where tempfile contains the raw bytestream of the message
+  Example:
+  $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey "HELLO AMQP"
+  $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey -f /etc/hosts
   
-  If program is not supplied, the above format will be printed to stdout
-  
-  Example: amqp_listen amqp.example.com 5672 amq.fanout '' ./onmessage.sh
