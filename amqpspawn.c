@@ -323,7 +323,7 @@ int main(int argc, char **argv) {
                   amqp_cstring_bytes(bindingkey), AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
-  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, 0, 0, 0,
+  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, 0, 0, exclusive,
                      AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
