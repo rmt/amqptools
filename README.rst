@@ -36,7 +36,7 @@ $ ./amqpspawn --help::
     --durable              declare the queue should survive broker restart
   
   The following environment variables may also be set:
-    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
+    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_QUEUE
     AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE
   
   Program will be called with the following arguments: routing_key, tempfile

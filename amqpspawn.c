@@ -150,7 +150,7 @@ void print_help(const char *program_name) {
     fprintf(stderr, "exclusive and durable options.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
-    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n");
+    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_QUEUE\n");
     fprintf(stderr, "  AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE\n\n");
     fprintf(stderr, "Program will be called with the following arguments: routing_key, tempfile\n");
     fprintf(stderr, "   tempfile contains the raw bytestream of the message\n\n");
@@ -195,6 +195,8 @@ int main(int argc, char **argv) {
     username = getenv("AMQP_USER");
   if (NULL != getenv("AMQP_PASSWORD"))
     password = getenv("AMQP_PASSWORD");
+  if (NULL != getenv("AMQP_QUEUE"))
+    queue = amqp_cstring_bytes(getenv("AMQP_QUEUE"));
   if (NULL != getenv("AMQP_QUEUE_PASSIVE"))
     passive = atoi(getenv("AMQP_QUEUE_PASSIVE"));
   if (NULL != getenv("AMQP_QUEUE_EXCLUSIVE"))
