@@ -170,6 +170,8 @@ int main(int argc, char **argv) {
   static int passive = 0;	// declare queue passively?
   static int exclusive = 0;	// declare queue as exclusive?
   static int durable = 0;	// decalre queue as durable?
+  int const no_ack = 0;     // we must send an ack to the server
+  int const no_local = 1;   // we never want to see messages we publish
   int c; // for option parsing
   char const *exchange = "";
   char const *bindingkey = "";
@@ -323,7 +325,7 @@ int main(int argc, char **argv) {
                   amqp_cstring_bytes(bindingkey), AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
-  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, 0, 0, exclusive,
+  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, no_local, no_ack, exclusive,
                      AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
