@@ -62,9 +62,11 @@ $ ./amqpsend --help::
     --user/-u username     specify username (default: "guest")
     --password/-p password specify password (default: "guest")
     --persistent           mark message as persistent
+    --no-persistent        mark message as NOT persistent
   
   The following environment variables may also be set:
-    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
+    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_PERSISENT
+  Acceptable values for AMQP_PERSISENT are '1' (No Persist) and '2' (Persist)
   
   Example:
   $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey "HELLO AMQP"
