@@ -142,15 +142,24 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
     fprintf(stderr, "  --foreground/-f        do not daemonise (default: daemonise with -e)\n");
+    fprintf(stderr, "  --passive              do not create the queue if it doesn't exist\n");
+    fprintf(stderr, "  --exclusive            declare the queue as exclusive\n");
+    fprintf(stderr, "  --durable              declare the queue should survive broker restart\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Refer to the AMQP documentation for full explanation of the passive,\n");
+    fprintf(stderr, "exclusive and durable options.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
-    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n\n");
+    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n");
+    fprintf(stderr, "  AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE\n\n");
     fprintf(stderr, "Program will be called with the following arguments: routing_key, tempfile\n");
     fprintf(stderr, "   tempfile contains the raw bytestream of the message\n\n");
     fprintf(stderr, "If program is not supplied, the above format will be printed to stdout\n\n");
     fprintf(stderr, "Example:\n");
     fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest \\\n");
-    fprintf(stderr, "amq.fanout mykey --foreground -e ./onmessage.sh\n\n");
+    fprintf(stderr, "	amq.fanout mykey --foreground -e ./onmessage.sh\n\n");
+    fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest -q myqueue --durable \\\n");
+    fprintf(stderr, "	default animals.dogs.* --foreground \n\n");
 }
 
 int main(int argc, char **argv) {
@@ -158,6 +167,9 @@ int main(int argc, char **argv) {
   int port = 5672; // amqp port
   static int verbose_flag = 0; // be verbose?
   static int foreground_flag = 0;
+  static int passive = 0;	// declare queue passively?
+  static int exclusive = 0;	// declare queue as exclusive?
+  static int durable = 0;	// decalre queue as durable?
   int c; // for option parsing
   char const *exchange = "";
   char const *bindingkey = "";
@@ -183,6 +195,12 @@ int main(int argc, char **argv) {
     username = getenv("AMQP_USER");
   if (NULL != getenv("AMQP_PASSWORD"))
     password = getenv("AMQP_PASSWORD");
+  if (NULL != getenv("AMQP_QUEUE_PASSIVE"))
+    passive = atoi(getenv("AMQP_QUEUE_PASSIVE"));
+  if (NULL != getenv("AMQP_QUEUE_EXCLUSIVE"))
+    exclusive = atoi(getenv("AMQP_QUEUE_EXCLUSIVE"));
+  if (NULL != getenv("AMQP_QUEUE_DURABLE"))
+    durable = atoi(getenv("AMQP_QUEUE_DURABLE"));
 
   while(1) {
     static struct option long_options[] =
@@ -194,6 +212,9 @@ int main(int argc, char **argv) {
       {"host", required_argument, 0, 'h'},
       {"port", required_argument, 0, 'P'},
       {"foreground", no_argument, 0, 'f'},
+      {"passive", no_argument, &passive, 1},
+      {"exclusive", no_argument, &exclusive, 1},
+      {"durable", no_argument, &durable, 1},
       {"execute", required_argument, 0, 'e'},
       {"queue", required_argument, 0, 'q'},
       {"help", no_argument, 0, '?'},
@@ -254,6 +275,19 @@ int main(int argc, char **argv) {
     }
   }
 
+  if ((passive != 0) && (passive != 1)) {
+	fprintf(stderr, "Queue option 'passive' must be 0 or 1: %u\n", passive);
+	exit(-1);
+  }
+  if ((exclusive != 0) && (exclusive != 1)) {
+	fprintf(stderr, "Queue option 'exclusive' must be 0 or 1: %u\n", exclusive);
+	exit(-1);
+  }
+  if ((durable != 0) && (durable != 1)) {
+	fprintf(stderr, "Queue option 'durable' must be 0 or 1: %u\n", durable);
+	exit(-1);
+  }
+
   conn = amqp_new_connection();
 
   die_on_error(sockfd = amqp_open_socket(hostname, port), "Opening socket");
@@ -273,8 +307,8 @@ int main(int argc, char **argv) {
     setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
   }
   {
-    amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, 1, queue, 0, 0, 0, 1,
-						    AMQP_EMPTY_TABLE);
+    amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, 1, queue, passive,
+			durable, exclusive, 1, AMQP_EMPTY_TABLE);
     die_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     queuename = amqp_bytes_malloc_dup(r->queue);
     if (queuename.bytes == NULL) {
