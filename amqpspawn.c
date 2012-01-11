@@ -145,6 +145,7 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --passive              do not create the queue if it doesn't exist\n");
     fprintf(stderr, "  --exclusive            declare the queue as exclusive\n");
     fprintf(stderr, "  --durable              declare the queue should survive broker restart\n");
+    fprintf(stderr, "  --no-ack               do not send acks to the server (WARNING: may cause data loss!)\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Refer to the AMQP documentation for full explanation of the passive,\n");
     fprintf(stderr, "exclusive and durable options.\n");
@@ -170,7 +171,7 @@ int main(int argc, char **argv) {
   static int passive = 0;	// declare queue passively?
   static int exclusive = 0;	// declare queue as exclusive?
   static int durable = 0;	// decalre queue as durable?
-  int const no_ack = 0;     // we must send an ack to the server
+  static int no_ack = 0;
   int const no_local = 1;   // we never want to see messages we publish
   int c; // for option parsing
   char const *exchange = "";
@@ -219,6 +220,7 @@ int main(int argc, char **argv) {
       {"passive", no_argument, &passive, 1},
       {"exclusive", no_argument, &exclusive, 1},
       {"durable", no_argument, &durable, 1},
+      {"no-ack", no_argument, &no_ack, 1},
       {"execute", required_argument, 0, 'e'},
       {"queue", required_argument, 0, 'q'},
       {"help", no_argument, 0, '?'},
@@ -459,7 +461,7 @@ int main(int argc, char **argv) {
       }
 
       // send ack on successful processing of the frame
-      if(0 == status)
+      if((0 == status) && (0 == no_ack))
         amqp_basic_ack(conn, frame.channel, d->delivery_tag, 0);
 
 
