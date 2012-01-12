@@ -106,27 +106,27 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
       switch (x.reply.id) {
-	case AMQP_CONNECTION_CLOSE_METHOD: {
-	  amqp_connection_close_t *m = (amqp_connection_close_t *) x.reply.decoded;
-	  fprintf(stderr, "%s: server connection error %d, message: %.*s\n",
-		  context,
-		  m->reply_code,
-		  (int) m->reply_text.len, (char *) m->reply_text.bytes);
-	  break;
-	}
-	case AMQP_CHANNEL_CLOSE_METHOD: {
-	  amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
-	  fprintf(stderr, "%s: server channel error %d, message: %.*s\n",
-		  context,
-		  m->reply_code,
-		  (int) m->reply_text.len, (char *) m->reply_text.bytes);
-	  break;
-	}
-	default:
-	  fprintf(stderr, "%s: unknown server error, method id 0x%08X\n", context, x.reply.id);
-	  break;
+        case AMQP_CONNECTION_CLOSE_METHOD: {
+          amqp_connection_close_t *m = (amqp_connection_close_t *) x.reply.decoded;
+          fprintf(stderr, "%s: server connection error %d, message: %.*s\n",
+          context,
+          m->reply_code,
+          (int) m->reply_text.len, (char *) m->reply_text.bytes);
+          break;
+        }
+        case AMQP_CHANNEL_CLOSE_METHOD: {
+          amqp_channel_close_t *m = (amqp_channel_close_t *) x.reply.decoded;
+          fprintf(stderr, "%s: server channel error %d, message: %.*s\n",
+          context,
+          m->reply_code,
+          (int) m->reply_text.len, (char *) m->reply_text.bytes);
+          break;
+        }
+        default:
+          fprintf(stderr, "%s: unknown server error, method id 0x%08X\n", context, x.reply.id);
+          break;
       }
-      break;
+    break;
   }
 
   exit(1);
@@ -134,36 +134,36 @@ void die_on_amqp_error(amqp_rpc_reply_t x, char const *context) {
 
 
 void print_help(const char *program_name) {
-    fprintf(stderr, "Usage: %s [options] exchange bindingkey\n", program_name);
-    fprintf(stderr, "Options:\n");
-    fprintf(stderr, "  --host/-h host         specify the host (default: \"amqpbroker\")\n");
-    fprintf(stderr, "  --port/-P port         specify AMQP port (default: 5672)\n");
-    fprintf(stderr, "  --vhost/-v vhost       specify vhost (default: \"/\")\n");
-    fprintf(stderr, "  --queue/-q queue       specify queue name (default: auto-generated)\n");
-    fprintf(stderr, "  --execute/-e program   program to execute\n");
-    fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
-    fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
-    fprintf(stderr, "  --number/-n n          retrieve a maxium n messages. 0 = unlimited (default: 0)\n");
-    fprintf(stderr, "  --foreground/-f        do not daemonise (default: daemonise with -e)\n");
-    fprintf(stderr, "  --passive              do not create the queue if it doesn't exist\n");
-    fprintf(stderr, "  --exclusive            declare the queue as exclusive\n");
-    fprintf(stderr, "  --durable              declare the queue should survive broker restart\n");
-    fprintf(stderr, "  --no-ack               do not send acks to the server (WARNING: may cause data loss!)\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Refer to the AMQP documentation for full explanation of the passive,\n");
-    fprintf(stderr, "exclusive and durable options.\n");
-    fprintf(stderr, "\n");
-    fprintf(stderr, "The following environment variables may also be set:\n");
-    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_QUEUE\n");
-    fprintf(stderr, "  AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE\n\n");
-    fprintf(stderr, "Program will be called with the following arguments: routing_key, tempfile\n");
-    fprintf(stderr, "   tempfile contains the raw bytestream of the message\n\n");
-    fprintf(stderr, "If program is not supplied, the above format will be printed to stdout\n\n");
-    fprintf(stderr, "Example:\n");
-    fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest \\\n");
-    fprintf(stderr, "	amq.fanout mykey --foreground -e ./onmessage.sh\n\n");
-    fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest -q myqueue --durable \\\n");
-    fprintf(stderr, "	default animals.dogs.* --foreground \n\n");
+  fprintf(stderr, "Usage: %s [options] exchange bindingkey\n", program_name);
+  fprintf(stderr, "Options:\n");
+  fprintf(stderr, "  --host/-h host         specify the host (default: \"amqpbroker\")\n");
+  fprintf(stderr, "  --port/-P port         specify AMQP port (default: 5672)\n");
+  fprintf(stderr, "  --vhost/-v vhost       specify vhost (default: \"/\")\n");
+  fprintf(stderr, "  --queue/-q queue       specify queue name (default: auto-generated)\n");
+  fprintf(stderr, "  --execute/-e program   program to execute\n");
+  fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
+  fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
+  fprintf(stderr, "  --number/-n n          retrieve a maxium n messages. 0 = unlimited (default: 0)\n");
+  fprintf(stderr, "  --foreground/-f        do not daemonise (default: daemonise with -e)\n");
+  fprintf(stderr, "  --passive              do not create the queue if it doesn't exist\n");
+  fprintf(stderr, "  --exclusive            declare the queue as exclusive\n");
+  fprintf(stderr, "  --durable              declare the queue should survive broker restart\n");
+  fprintf(stderr, "  --no-ack               do not send acks to the server (WARNING: may cause data loss!)\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "Refer to the AMQP documentation for full explanation of the passive,\n");
+  fprintf(stderr, "exclusive and durable options.\n");
+  fprintf(stderr, "\n");
+  fprintf(stderr, "The following environment variables may also be set:\n");
+  fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_QUEUE\n");
+  fprintf(stderr, "  AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE\n\n");
+  fprintf(stderr, "Program will be called with the following arguments: routing_key, tempfile\n");
+  fprintf(stderr, "   tempfile contains the raw bytestream of the message\n\n");
+  fprintf(stderr, "If program is not supplied, the above format will be printed to stdout\n\n");
+  fprintf(stderr, "Example:\n");
+  fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest \\\n");
+  fprintf(stderr, "  amq.fanout mykey --foreground -e ./onmessage.sh\n\n");
+  fprintf(stderr, "$ amqpspawn -h amqp.example.com -P 5672 -u guest -p guest -q myqueue --durable \\\n");
+  fprintf(stderr, "  default animals.dogs.* --foreground \n\n");
 }
 
 int main(int argc, char **argv) {
@@ -171,9 +171,9 @@ int main(int argc, char **argv) {
   int port = 5672; // amqp port
   static int verbose_flag = 0; // be verbose?
   static int foreground_flag = 0;
-  static int passive = 0;	// declare queue passively?
-  static int exclusive = 0;	// declare queue as exclusive?
-  static int durable = 0;	// decalre queue as durable?
+  static int passive = 0;  // declare queue passively?
+  static int exclusive = 0;  // declare queue as exclusive?
+  static int durable = 0;  // decalre queue as durable?
   static int no_ack = 0;
   static int msg_limit = 0; // maxiumum number of messages to retrieve
   int const no_local = 1;   // we never want to see messages we publish
@@ -294,16 +294,16 @@ int main(int argc, char **argv) {
   }
 
   if ((passive != 0) && (passive != 1)) {
-	fprintf(stderr, "Queue option 'passive' must be 0 or 1: %u\n", passive);
-	exit(-1);
+    fprintf(stderr, "Queue option 'passive' must be 0 or 1: %u\n", passive);
+    exit(-1);
   }
   if ((exclusive != 0) && (exclusive != 1)) {
-	fprintf(stderr, "Queue option 'exclusive' must be 0 or 1: %u\n", exclusive);
-	exit(-1);
+    fprintf(stderr, "Queue option 'exclusive' must be 0 or 1: %u\n", exclusive);
+    exit(-1);
   }
   if ((durable != 0) && (durable != 1)) {
-	fprintf(stderr, "Queue option 'durable' must be 0 or 1: %u\n", durable);
-	exit(-1);
+    fprintf(stderr, "Queue option 'durable' must be 0 or 1: %u\n", durable);
+    exit(-1);
   }
 
   conn = amqp_new_connection();
@@ -311,12 +311,12 @@ int main(int argc, char **argv) {
   die_on_error(sockfd = amqp_open_socket(hostname, port), "Opening socket");
   amqp_set_sockfd(conn, sockfd);
   die_on_amqp_error(amqp_login(conn, vhost,
-                               0, /* channel_max */
-                               10485760, /* max frame size, 10MB */
-                               30, /* heartbeat, 30 secs */
+                               0,         /* channel_max */
+                               10485760,  /* max frame size, 10MB */
+                               30,        /* heartbeat, 30 secs */
                                AMQP_SASL_METHOD_PLAIN,
                                username, password),
-		    "Logging in");
+        "Logging in");
   amqp_channel_open(conn, 1);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
   {
@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
   }
   {
     amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, 1, queue, passive,
-			durable, exclusive, 1, AMQP_EMPTY_TABLE);
+        durable, exclusive, 1, AMQP_EMPTY_TABLE);
     die_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     queuename = amqp_bytes_malloc_dup(r->queue);
     if (queuename.bytes == NULL) {
@@ -400,7 +400,7 @@ int main(int argc, char **argv) {
       result = amqp_simple_wait_frame(conn, &frame);
       //printf("Result %d\n", result);
       if (result < 0)
-	break;
+        break;
 
       //printf("Frame type %d, channel %d\n", frame.frame_type, frame.channel);
       if (frame.frame_type == AMQP_FRAME_HEARTBEAT) {
@@ -408,32 +408,32 @@ int main(int argc, char **argv) {
         amqp_send_frame(conn, &frame);
         continue;
       } else if (frame.frame_type != AMQP_FRAME_METHOD)
-	continue;
+        continue;
 
       //printf("Method %s\n", amqp_method_name(frame.payload.method.id));
       if (frame.payload.method.id != AMQP_BASIC_DELIVER_METHOD)
-	continue;
+        continue;
 
       d = (amqp_basic_deliver_t *) frame.payload.method.decoded;
       /*
       printf("Delivery %u, exchange %.*s routingkey %.*s\n",
-	     (unsigned) d->delivery_tag,
-	     (int) d->exchange.len, (char *) d->exchange.bytes,
-	     (int) d->routing_key.len, (char *) d->routing_key.bytes);
+       (unsigned) d->delivery_tag,
+       (int) d->exchange.len, (char *) d->exchange.bytes,
+       (int) d->routing_key.len, (char *) d->routing_key.bytes);
       */
       result = amqp_simple_wait_frame(conn, &frame);
       if (result < 0)
-	break;
+        break;
 
       if (frame.frame_type != AMQP_FRAME_HEADER) {
-	fprintf(stderr, "Expected header!");
-	abort();
+        fprintf(stderr, "Expected header!");
+        abort();
       }
       p = (amqp_basic_properties_t *) frame.payload.properties.decoded;
       /*
       if (p->_flags & AMQP_BASIC_CONTENT_TYPE_FLAG) {
-	printf("Content-type: %.*s\n",
-	       (int) p->content_type.len, (char *) p->content_type.bytes);
+  printf("Content-type: %.*s\n",
+         (int) p->content_type.len, (char *) p->content_type.bytes);
       }
       printf("----\n");
       */
@@ -443,21 +443,20 @@ int main(int argc, char **argv) {
       tempfd = mkstemp(tempfile);
       //tempfd = open(tempfile, O_WRONLY | O_CREAT | O_EXCL, 660);
       while (body_received < body_target) {
-	result = amqp_simple_wait_frame(conn, &frame);
-	if (result < 0)
-	  break;
+        result = amqp_simple_wait_frame(conn, &frame);
+        if (result < 0)
+          break;
 
-	if (frame.frame_type != AMQP_FRAME_BODY) {
-	  fprintf(stderr, "Expected body!");
-	  abort();
-	}	  
+        if (frame.frame_type != AMQP_FRAME_BODY) {
+          fprintf(stderr, "Expected body!");
+          abort();
+        }
 
-	body_received += frame.payload.body_fragment.len;
-	assert(body_received <= body_target);
+        body_received += frame.payload.body_fragment.len;
+        assert(body_received <= body_target);
 
         if (write(tempfd, frame.payload.body_fragment.bytes,
                           frame.payload.body_fragment.len) < 0) {
-          
           perror("Error while writing received message to temp file");
         }
       }
@@ -494,9 +493,9 @@ int main(int argc, char **argv) {
 
 
       if (body_received != body_target) {
-	/* Can only happen when amqp_simple_wait_frame returns <= 0 */
-	/* We break here to close the connection */
-	break;
+        /* Can only happen when amqp_simple_wait_frame returns <= 0 */
+        /* We break here to close the connection */
+        break;
       }
     }
   }
