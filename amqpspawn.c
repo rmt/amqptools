@@ -63,6 +63,7 @@
 #include <assert.h>
 #include <getopt.h>
 
+#define AMQP_CHANNEL 1
 #define DEFAULT_PREFETCH 10
 
 // from "example_utils.c"
@@ -317,7 +318,7 @@ int main(int argc, char **argv) {
                                AMQP_SASL_METHOD_PLAIN,
                                username, password),
         "Logging in");
-  amqp_channel_open(conn, 1);
+  amqp_channel_open(conn, AMQP_CHANNEL);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Opening channel");
   {
     int optval = 1;
@@ -325,7 +326,7 @@ int main(int argc, char **argv) {
     setsockopt(sockfd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen);
   }
   {
-    amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, 1, queue, passive,
+    amqp_queue_declare_ok_t *r = amqp_queue_declare(conn, AMQP_CHANNEL, queue, passive,
         durable, exclusive, 1, AMQP_EMPTY_TABLE);
     die_on_amqp_error(amqp_get_rpc_reply(conn), "Declaring queue");
     queuename = amqp_bytes_malloc_dup(r->queue);
@@ -335,7 +336,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes(exchange),
+  amqp_queue_bind(conn, AMQP_CHANNEL, queuename, amqp_cstring_bytes(exchange),
                   amqp_cstring_bytes(bindingkey), AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
@@ -345,10 +346,10 @@ int main(int argc, char **argv) {
   if (msg_limit > 0 && msg_limit <= 65535)
     prefetch_limit = msg_limit;
 
-  amqp_basic_qos(conn, 1, 0, prefetch_limit, 0);
+  amqp_basic_qos(conn, AMQP_CHANNEL, 0, prefetch_limit, 0);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Setting Basic QOS (prefetch limit)");
 
-  amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, no_local, no_ack, exclusive,
+  amqp_basic_consume(conn, AMQP_CHANNEL, queuename, AMQP_EMPTY_BYTES, no_local, no_ack, exclusive,
                      AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
 
@@ -500,7 +501,7 @@ int main(int argc, char **argv) {
     }
   }
 
-  die_on_amqp_error(amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS), "Closing channel");
+  die_on_amqp_error(amqp_channel_close(conn, AMQP_CHANNEL, AMQP_REPLY_SUCCESS), "Closing channel");
   die_on_amqp_error(amqp_connection_close(conn, AMQP_REPLY_SUCCESS), "Closing connection");
   die_on_error(amqp_destroy_connection(conn), "Ending connection");
 
