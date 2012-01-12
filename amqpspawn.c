@@ -63,6 +63,8 @@
 #include <assert.h>
 #include <getopt.h>
 
+#define DEFAULT_PREFETCH 10
+
 // from "example_utils.c"
 void die_on_error(int x, char const *context) {
   if (x < 0) {
@@ -141,6 +143,7 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --execute/-e program   program to execute\n");
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
+    fprintf(stderr, "  --number/-n n          retrieve a maxium n messages. 0 = unlimited (default: 0)\n");
     fprintf(stderr, "  --foreground/-f        do not daemonise (default: daemonise with -e)\n");
     fprintf(stderr, "  --passive              do not create the queue if it doesn't exist\n");
     fprintf(stderr, "  --exclusive            declare the queue as exclusive\n");
@@ -172,6 +175,7 @@ int main(int argc, char **argv) {
   static int exclusive = 0;	// declare queue as exclusive?
   static int durable = 0;	// decalre queue as durable?
   static int no_ack = 0;
+  static int msg_limit = 0; // maxiumum number of messages to retrieve
   int const no_local = 1;   // we never want to see messages we publish
   int c; // for option parsing
   char const *exchange = "";
@@ -206,6 +210,9 @@ int main(int argc, char **argv) {
     exclusive = atoi(getenv("AMQP_QUEUE_EXCLUSIVE"));
   if (NULL != getenv("AMQP_QUEUE_DURABLE"))
     durable = atoi(getenv("AMQP_QUEUE_DURABLE"));
+  if (NULL != getenv("AMQP_MSG_LIMIT"))
+    msg_limit = atoi(getenv("AMQP_MSG_LIMIT"));
+  msg_limit = msg_limit > 0 ? msg_limit : 0; // default to unlimited
 
   while(1) {
     static struct option long_options[] =
@@ -216,6 +223,7 @@ int main(int argc, char **argv) {
       {"vhost", required_argument, 0, 'v'},
       {"host", required_argument, 0, 'h'},
       {"port", required_argument, 0, 'P'},
+      {"number", required_argument, 0, 'n'},
       {"foreground", no_argument, 0, 'f'},
       {"passive", no_argument, &passive, 1},
       {"exclusive", no_argument, &exclusive, 1},
@@ -227,7 +235,7 @@ int main(int argc, char **argv) {
       {0, 0, 0, 0}
     };
     int option_index = 0;
-    c = getopt_long(argc, argv, "v:h:P:u:p:fe:q:?",
+    c = getopt_long(argc, argv, "v:h:P:u:p:n:fe:q:?",
                     long_options, &option_index);
     if(c == -1)
       break;
@@ -247,6 +255,10 @@ int main(int argc, char **argv) {
         break;
       case 'f':
         foreground_flag = 1;
+      case 'n':
+        msg_limit = atoi(optarg);
+        msg_limit = msg_limit > 0 ? msg_limit : 0; // deafult to unlimited
+        break;
       case 'e':
         program = optarg;
         break;
@@ -327,6 +339,15 @@ int main(int argc, char **argv) {
                   amqp_cstring_bytes(bindingkey), AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Binding queue");
 
+  /* Set our prefetch to the maximum number of messages we want to ensure we
+   * don't take more than we want according to --number option from user */
+  int prefetch_limit = DEFAULT_PREFETCH;
+  if (msg_limit > 0 && msg_limit <= 65535)
+    prefetch_limit = msg_limit;
+
+  amqp_basic_qos(conn, 1, 0, prefetch_limit, 0);
+  die_on_amqp_error(amqp_get_rpc_reply(conn), "Setting Basic QOS (prefetch limit)");
+
   amqp_basic_consume(conn, 1, queuename, AMQP_EMPTY_BYTES, no_local, no_ack, exclusive,
                      AMQP_EMPTY_TABLE);
   die_on_amqp_error(amqp_get_rpc_reply(conn), "Consuming");
@@ -361,9 +382,16 @@ int main(int argc, char **argv) {
     install_term_handler(SIGTERM);
     install_term_handler(SIGHUP);
 
+    int msg_count = 0;
     while (1) {
       char tempfile[] = "/tmp/amqp.XXXXXX";
       int tempfd;
+
+      // exit if we've reached our maximum message count
+      if((0 != msg_limit) && (msg_limit == msg_count))
+        break;
+      // we haven't reached our limit; move on to the next
+      msg_count++;
 
       if(g_shutdown == 1)
           break;
