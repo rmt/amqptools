@@ -124,9 +124,11 @@ void print_help(const char *program_name) {
     fprintf(stderr, "  --user/-u username     specify username (default: \"guest\")\n");
     fprintf(stderr, "  --password/-p password specify password (default: \"guest\")\n");
     fprintf(stderr, "  --persistent           mark message as persistent\n");
+    fprintf(stderr, "  --no-persistent        mark message as not persistent\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "The following environment variables may also be set:\n");
-    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD\n\n");
+    fprintf(stderr, "  AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_PERSISTENT\n");
+    fprintf(stderr, "Acceptable values for AMQP_PERSISENT are '1' (Not Persistent) and '2' (Persistent)\n\n");
     fprintf(stderr, "Example:\n");
     fprintf(stderr, "$ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey \"HELLO AMQP\"\n");
     fprintf(stderr, "$ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey -f /etc/hosts\n\n");
@@ -182,6 +184,8 @@ int main(int argc, char **argv) {
     username = getenv("AMQP_USER");
   if (NULL != getenv("AMQP_PASSWORD"))
     password = getenv("AMQP_PASSWORD");
+  if (NULL != getenv("AMQP_PERSISTENT"))
+    persistent = atoi(getenv("AMQP_PERSISTENT"));
 
   while(1) {
     static struct option long_options[] =
@@ -194,6 +198,7 @@ int main(int argc, char **argv) {
       {"port", required_argument, 0, 'P'},
       {"file", required_argument, 0, 'f'},
       {"persistent", no_argument, &persistent, 2},
+      {"no-persistent", no_argument, &persistent, 1},
       {"help", no_argument, 0, '?'},
       {0, 0, 0, 0}
     };
@@ -249,6 +254,11 @@ int main(int argc, char **argv) {
       fprintf(stderr, "Error reading from file: %s\n", filename);
       exit(size);
     }
+  }
+
+  if ((persistent != 1) && (persistent != 2)) {
+	fprintf(stderr, "Value '%u' not valid AMQP_PERSIST value ('1' and '2' only)\n", persistent);
+	exit(1);
   }
 
   conn = amqp_new_connection();
