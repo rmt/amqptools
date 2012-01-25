@@ -1,0 +1,33 @@
+Installation notes under RedHat/CentOS 5
+
+These are just my notes from having installed on a CentOS 5 server. They
+definitely need to be expanded and explained better but should make a good
+starting point for getting amqptools working.
+
+1. Install additional packages:
+    => python-simplejson
+    => libtool
+    => autoconf
+    => automake
+    => gcc
+
+2. Download and compile supporting code:
+    git clone git://github.com/rabbitmq/rabbitmq-codegen.git
+    git clone git://github.com/rabbitmq/rabbitmq-c.git
+    cd rabbitmq-c
+    automake
+    autoreconf -i
+    ./configure
+    make
+
+No need to actually install the supporting packages; the compiled packages
+just need to be available for amqptools.
+
+3. Compile amqptools:
+    cd amqptools
+    make AMQPTOOLS_RABBITHOME=../rabbitmq-c
+This assumes the rabbitmq-c` path is parallel to the amqptools directory:
+  parent/
+  ├── amqptools/
+  ├── rabbitmq-c/
+  └── rabbitmq-codegen/
