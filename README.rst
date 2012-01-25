@@ -31,9 +31,13 @@ $ ./amqpspawn --help::
     --user/-u username     specify username (default: "guest")
     --password/-p password specify password (default: "guest")
     --foreground/-f        do not daemonise (default: daemonise with -e)
+    --passive              do not create the queue if it doesn't exist
+    --exclusive            declare the queue as exclusive
+    --durable              declare the queue should survive broker restart
   
   The following environment variables may also be set:
-    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
+    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_QUEUE
+    AMQP_QUEUE_PASSIVE, AMQP_QUEUE_EXCLUSIVE, AMQP_QUEUE_DURABLE
   
   Program will be called with the following arguments: routing_key, tempfile
      tempfile contains the raw bytestream of the message
@@ -62,9 +66,11 @@ $ ./amqpsend --help::
     --user/-u username     specify username (default: "guest")
     --password/-p password specify password (default: "guest")
     --persistent           mark message as persistent
+    --no-persistent        mark message as NOT persistent
   
   The following environment variables may also be set:
-    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD
+    AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_PERSISENT
+  Acceptable values for AMQP_PERSISENT are '1' (No Persist) and '2' (Persist)
   
   Example:
   $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey "HELLO AMQP"
