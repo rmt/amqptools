@@ -288,14 +288,18 @@ int main(int argc, char **argv) {
 
   if (NULL != program) {
     // check that the program is executable
-	char *program_cmd = malloc( (strlen(program) + 1) * sizeof(char));
-	strcpy(program_cmd,program);
-	*strchr(program_cmd,' ') = '\0';
-	if (0 != access(program_cmd, X_OK)) {
-      fprintf(stderr, "Program doesn't have execute permission, aborting: %s\n", program_cmd);
-      exit(-1);
+    char *wend;
+    wend = strchr(program, ' ');
+    if(wend){
+        *wend = '\0';
     }
-	free(program_cmd);
+    if (0 != access(program, X_OK)) {
+        fprintf(stderr, "Program doesn't have execute permission, aborting: %s\n", program);
+        exit(-1);
+      }
+    if(wend){
+        *wend = ' ';
+    }
   }
 
   if ((passive != 0) && (passive != 1)) {
