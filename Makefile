@@ -13,8 +13,8 @@ all: clean build
 build: amqpspawn amqpsend
 
 install: bin/amqpspawn bin/amqpsend
-	cp -f bin/amqpspawn $(AMQPTOOLS_INSTALLROOT)/
-	cp -f bin/amqpsend $(AMQPTOOLS_INSTALLROOT)/
+	install -D -m0755 bin/amqpspawn $(AMQPTOOLS_INSTALLROOT)/amqpspawn
+	install -D -m0755 bin/amqpsend $(AMQPTOOLS_INSTALLROOT)/amqpsend
 
 uninstall:
 	rm -f $(AMQPTOOLS_INSTALLROOT)/amqpspawn
