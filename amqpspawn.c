@@ -185,6 +185,7 @@ int main(int argc, char **argv) {
   char const *username = "guest";
   char const *password = "guest";
   char const *program = NULL;
+  char const *program_args = NULL;
   amqp_bytes_t queue = AMQP_EMPTY_BYTES;
 
   int sockfd;
@@ -292,6 +293,7 @@ int main(int argc, char **argv) {
     wend = strchr(program, ' ');
     if(wend){
         *wend = '\0';
+        program_args = wend+1;
     }
     if (0 != access(program, X_OK)) {
         fprintf(stderr, "Program doesn't have execute permission, aborting: %s\n", program);
@@ -480,7 +482,7 @@ int main(int argc, char **argv) {
           // fork and run the program in the background
           pid_t pid = fork();
           if (pid == 0) {
-            if(execl(program, program, routekey, tempfile, NULL) == -1) {
+            if(execl(program, program, program_args, routekey, tempfile, NULL) == -1) {
               perror("Could not execute program");
               exit(EXIT_FAILURE);
             }
