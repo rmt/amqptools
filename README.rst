@@ -57,7 +57,7 @@ You may also pass a filename as input.
   
 $ ./amqpsend --help::
   
-  Usage: ./amqpsend [options] exchange routingkey [msg]
+  Usage: ./amqpsend [options] exchange routingkey [message]
   Options:
     --host/-h host         specify the host (default: "amqpbroker")
     --port/-P port         specify AMQP port (default: 5672)
@@ -71,8 +71,12 @@ $ ./amqpsend --help::
   The following environment variables may also be set:
     AMQP_HOST, AMQP_PORT, AMQP_VHOST, AMQP_USER, AMQP_PASSWORD, AMQP_PERSISENT
   Acceptable values for AMQP_PERSISENT are '1' (No Persist) and '2' (Persist)
+
+  With no -f option and no message, message contents will be read from standard
+  input. 
   
   Example:
   $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey "HELLO AMQP"
   $ amqpsend -h amqp.example.com -P 5672 amq.fanout mykey -f /etc/hosts
+  $ echo "HELLO AMQP" | amqpsend -h amqp.example.com -P 5672 amq.fanout mykey
   
