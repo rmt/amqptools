@@ -1,6 +1,6 @@
-Installation notes under RedHat/CentOS 5
+Installation notes under RedHat/CentOS
 
-These are just my notes from having installed on a CentOS 5 server. They
+These are just my notes from having installed on a CentOS server. They
 definitely need to be expanded and explained better but should make a good
 starting point for getting amqptools working.
 
@@ -12,10 +12,10 @@ starting point for getting amqptools working.
     => gcc
 
 2. Download and compile supporting code:
-    git clone git://github.com/rabbitmq/rabbitmq-codegen.git
-    git clone git://github.com/rabbitmq/rabbitmq-c.git
+    git clone git://github.com/alanxz/rabbitmq-c.git
     cd rabbitmq-c
-    automake
+    git submodule init
+    git submodule update
     autoreconf -i
     ./configure
     make
