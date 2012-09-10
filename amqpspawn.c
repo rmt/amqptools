@@ -257,6 +257,7 @@ int main(int argc, char **argv) {
         break;
       case 'f':
         foreground_flag = 1;
+        break;
       case 'n':
         msg_limit = atoi(optarg);
         msg_limit = msg_limit > 0 ? msg_limit : 0; // deafult to unlimited
