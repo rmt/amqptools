@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
   char const *username = "guest";
   char const *password = "guest";
   char const *program = NULL;
-  char const *program_args = NULL;
+  char const *program_args = "";
   amqp_bytes_t queue = AMQP_EMPTY_BYTES;
 
   int sockfd;
