@@ -321,6 +321,7 @@ int main(int argc, char **argv) {
   conn = amqp_new_connection();
 
   die_on_error(sockfd = amqp_open_socket(hostname, port), "Opening socket");
+  fcntl(sockfd, F_SETFD, FD_CLOEXEC);
   amqp_set_sockfd(conn, sockfd);
   die_on_amqp_error(amqp_login(conn, vhost,
                                0,         /* channel_max */
