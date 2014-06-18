@@ -7,6 +7,8 @@ ifeq (${AMQPTOOLS_INSTALLROOT},)
     AMQPTOOLS_INSTALLROOT = "/usr/local/bin"
 endif
 
+LD_RUN_PATH = $(realpath $(AMQPTOOLS_RABBITHOME)/librabbitmq/.libs)
+export LD_RUN_PATH
 
 all: clean build
 
